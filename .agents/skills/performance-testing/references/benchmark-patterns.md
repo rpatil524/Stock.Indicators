@@ -105,16 +105,16 @@ public class EmaStyleComparison
 
 ```bash
 # Single indicator (Series benchmarks carry a `Batch` suffix; Stream use `Hub`)
-dotnet run -c Release --filter *.ToEmaBatch
+dotnet run -c Release -- --filter "*.ToEmaBatch"
 
 # All EMA benchmarks
-dotnet run -c Release --filter *Ema*
+dotnet run -c Release -- --filter "*Ema*"
 
 # Style category
-dotnet run -c Release --filter *Stream*
+dotnet run -c Release -- --filter "*Stream*"
 
 # Multiple indicators
-dotnet run -c Release --filter *.ToEmaBatch --filter *.ToSmaBatch
+dotnet run -c Release -- --filter "*.ToEmaBatch" --filter "*.ToSmaBatch"
 ```
 
 ## Interpreting results
@@ -142,8 +142,11 @@ Add `[MemoryDiagnoser]` to see allocations:
 
 ## Regression detection workflow
 
-1. Run baseline benchmarks after stable release
-2. Save results to `baselines/` directory
-3. Run benchmarks after changes
-4. Compare with `detect-regressions.ps1`
-5. Investigate any > 10% regressions
+Use `perf.sh` (see [benchmarking.md](../../../../tools/performance/benchmarking.md)):
+
+1. Establish baselines after stable, verified perf work: `perf.sh reset`
+   (runs the baseline suite and writes both `-report-full.json` and
+   `-report-github.md` per suite into `baselines/`).
+2. After changes, check with `perf.sh evaluate` (full) or
+   `perf.sh spot <name>` (targeted).
+3. Investigate any regression above the threshold (default 10%).

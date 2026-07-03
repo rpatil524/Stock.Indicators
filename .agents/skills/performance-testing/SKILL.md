@@ -7,19 +7,39 @@ description: Benchmark indicator performance with BenchmarkDotNet. Use for Serie
 
 ## Running benchmarks
 
+Prefer `perf.sh` — one entry point for the three common workflows (requires `jq`
+for evaluate/spot). See the canonical guide:
+[tools/performance/benchmarking.md](../../../tools/performance/benchmarking.md).
+
 ```bash
-cd tools/performance
+# 1. Spot check: one indicator vs baseline (fast; recommended dev-loop check)
+bash tools/performance/perf.sh spot Ema
+bash tools/performance/perf.sh spot Adx Stream        # single style
 
-# Run all benchmarks (~15-20 minutes)
-dotnet run -c Release
+# 2. Evaluate: full suite, report regressions vs baselines (~1 hour)
+bash tools/performance/perf.sh evaluate
 
-# Run specific category
-dotnet run -c Release --filter *StreamIndicators*
-dotnet run -c Release --filter *BufferIndicators*
-dotnet run -c Release --filter *SeriesIndicators*
+# 3. Reset baselines: full suite, replace committed baselines (~1 hour)
+bash tools/performance/perf.sh reset
+```
 
-# Run specific indicator
-dotnet run -c Release --filter *.EmaHub
+Do not add tuning options (`--job`, thresholds, etc.) to these — plain runs stay
+comparable to the committed baselines.
+
+Baseline set = `SeriesIndicators`, `BufferIndicators`, `StreamIndicators`,
+`Utility`, `UtilityNullMath`, `UtilityStdDev` (same as no-arg `dotnet run`).
+
+Raw BenchmarkDotNet control (from `tools/performance`):
+
+```bash
+dotnet run -c Release                                   # full baseline suite
+dotnet run -c Release -- --filter "*StreamIndicators*"  # one suite
+dotnet run -c Release -- --filter "*.EmaHub"            # one method
+
+# Large-N direct harness (diagnostic; not baselined)
+PERF_TEST_KEYWORD=ema PERF_TEST_PERIODS=500000 dotnet run -c Release -- --filter "Performance.ManualTestDirect*"
+# Exercise pruning path (Cap < Periods)
+PERF_TEST_KEYWORD=adl PERF_TEST_PERIODS=500000 PERF_TEST_CAP=100000 dotnet run -c Release -- --filter "Performance.ManualTestDirect*"
 ```
 
 ## Adding benchmarks
@@ -60,7 +80,7 @@ public IReadOnlyList<MyResult> MyIndicatorStream() => barHub.ToMyIndicator(14).R
 
 ## Performance targets
 
-**Note**: These are optimization goals for future v3.1+ effort. Current implementations vary—see `PERFORMANCE_ANALYSIS.md` for actual measured performance. Some indicator families (e.g., EMA) have inherent framework overhead due to simple operation costs.
+**Note**: These are optimization goals for future v3.1+ effort. Current implementations vary by indicator family.
 
 | Style | Target vs Series | Use Case |
 | ----- | ---------------- | -------- |
@@ -81,25 +101,24 @@ public IReadOnlyList<MyResult> MyIndicatorStream() => barHub.ToMyIndicator(14).R
 
 ## Regression detection
 
-```bash
-# Auto-detect baseline and results
-pwsh detect-regressions.ps1
+`perf.sh evaluate` / `spot` call `detect-regressions.sh`, which pairs each current
+result with its same-named baseline and compares per method (requires `jq`).
 
-# Custom threshold (default 10%)
-pwsh detect-regressions.ps1 -ThresholdPercent 15
+```bash
+# Full evaluate (run + compare)
+bash tools/performance/perf.sh evaluate
+
+# Compare existing results only (no run)
+bash tools/performance/detect-regressions.sh --threshold 15
 ```
 
-Exit codes:
+Exit codes: `0` no regressions, `1` regressions found, `2` usage/IO error.
 
-- `0` - No regressions
-- `1` - Regressions found
-
-## Creating baselines
+## Creating / refreshing baselines
 
 ```bash
-# baselines/ holds one report per benchmark class
-# (Performance.SeriesIndicators-report-full.json, etc.)
-cp BenchmarkDotNet.Artifacts/results/Performance.*-report-full.json baselines/
+# Runs the full baseline suite and copies results into baselines/
+bash tools/performance/perf.sh reset
 ```
 
 ## Required optimization patterns

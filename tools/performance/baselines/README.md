@@ -1,65 +1,42 @@
-# Performance Baselines
+# Performance baselines
 
-This directory contains baseline performance metrics for regression detection.
+Committed BenchmarkDotNet baseline artifacts used for performance regression
+checks. For how to run benchmarks and refresh these files, see the canonical
+[benchmarking guide](../benchmarking.md).
 
-For comprehensive performance analysis and findings, see `../PERFORMANCE_ANALYSIS.md`.
+## What is stored here
 
-## Overview
+Two files per baseline suite:
 
-Baseline files are JSON exports from BenchmarkDotNet that capture performance metrics for comparison with current test runs. These enable automated detection of performance regressions during development and CI/CD.
+- `Performance.<Suite>-report-full.json` — machine-readable (regression input)
+- `Performance.<Suite>-report-github.md` — human-readable tables (committed for review)
 
-## File naming convention
+## Baseline set
 
-- `baseline-v{version}.json` - Baseline for a specific version (e.g., `baseline-v3.0.0.json`)
-- `baseline-latest.json` - Most recent baseline (symlink or copy)
+These suites are the committed baseline (matches the no-arg `dotnet run -c Release`
+default in `Program.cs` and `BASELINE_CLASSES` in `perf.sh`):
 
-## Creating a new baseline
+- `SeriesIndicators`, `BufferIndicators`, `StreamIndicators` — every indicator, per style
+- `Utility`, `UtilityNullMath`, `UtilityStdDev` — shared hot paths / helpers
 
-After running performance tests, copy the JSON results to create a new baseline:
+`StyleComparison`, `StreamExternal`, and `ManualTestDirect` are diagnostics and
+are **not** baselined here.
 
-```bash
-# Run performance tests
-dotnet run -c Release
+## Refresh and check
 
-# Copy JSON results to baselines directory
-cp BenchmarkDotNet.Artifacts/results/Performance.*-report-full.json baselines/baseline-v3.0.0.json
-
-# Update latest baseline
-cp baselines/baseline-v3.0.0.json baselines/baseline-latest.json
-```
-
-## Using baselines for regression detection
-
-The `detect-regressions.ps1` script compares current results with a baseline:
+Run from the repository root:
 
 ```bash
-# Compare with specific baseline
-pwsh detect-regressions.ps1 -BaselineFile baselines/baseline-v3.0.0.json -ThresholdPercent 10
+# Regenerate all baseline files (run + copy)
+bash tools/performance/perf.sh reset
 
-# Auto-detect latest baseline and results
-pwsh detect-regressions.ps1
+# Compare current results against these baselines
+bash tools/performance/perf.sh evaluate
 ```
 
-## Baseline management best practices
+## Notes
 
-- Create baselines for each major/minor release
-- Update baselines when intentional performance changes are made
-- Keep at least the last 3 version baselines for historical comparison
-- Document significant performance changes in release notes
-
-## What triggers a regression?
-
-By default, a performance regression is flagged when:
-
-- Mean execution time increases by more than 10% compared to baseline
-- This threshold can be adjusted using the `-ThresholdPercent` parameter
-
-## Integration with CI/CD
-
-The GitHub Actions workflow (`test-performance.yml`) runs:
-
-1. Full benchmark suite on manual trigger
-2. Publishes results to GitHub Summary
-3. Uploads artifacts for historical tracking
-
-For regression detection integration, see `../PERFORMANCE_ANALYSIS.md`.
+- The `-github.md` and `-report-full.json` files are committed on purpose; only
+  `*.zip` archives are git-ignored here.
+- Keep baseline refreshes tied to intentional, verified performance work.
+- Historical pre-fix snapshots were retired; use git history/tags for older baselines.
