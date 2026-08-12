@@ -1637,6 +1637,30 @@
     ]
   },
   {
+    "name": "Heikin-Ashi",
+    "uiid": "HEIKIN-ASHI",
+    "legendTemplate": "HEIKIN-ASHI",
+    "endpoint": "https://charts-api.stockindicators.dev/HEIKIN-ASHI/",
+    "category": "price-transform",
+    "chartType": "overlay",
+    "order": 1,
+    "chartConfig": null,
+    "parameters": [],
+    "results": [
+      {
+        "displayName": "Heikin-Ashi",
+        "tooltipTemplate": "HEIKIN-ASHI",
+        "dataName": "close",
+        "dataType": "number",
+        "lineType": "candle",
+        "stack": null,
+        "lineWidth": 2,
+        "defaultColor": "#1E88E5",
+        "fill": null
+      }
+    ]
+  },
+  {
     "name": "Hilbert Transform Instantaneous Trendline",
     "uiid": "HT Trendline",
     "legendTemplate": "HT TRENDLINE",
@@ -3296,6 +3320,105 @@
         "displayName": "Slope",
         "tooltipTemplate": "SLOPE([P1])",
         "dataName": "slope",
+        "dataType": "number",
+        "lineType": "solid",
+        "stack": null,
+        "lineWidth": 2,
+        "defaultColor": "#1E88E5",
+        "fill": null
+      }
+    ]
+  },
+  {
+    "name": "SMA Error Analysis (MAD)",
+    "uiid": "SMA-MAD",
+    "legendTemplate": "SMA-MAD([P1])",
+    "endpoint": "https://charts-api.stockindicators.dev/SMA-ANALYSIS/",
+    "category": "price-characteristic",
+    "chartType": "oscillator",
+    "order": 1,
+    "chartConfig": null,
+    "parameters": [
+      {
+        "displayName": "Lookback Periods",
+        "paramName": "lookbackPeriods",
+        "dataType": "int",
+        "minimum": 2,
+        "maximum": 250,
+        "defaultValue": 14
+      }
+    ],
+    "results": [
+      {
+        "displayName": "Mean Absolute Deviation",
+        "tooltipTemplate": "SMA-MAD([P1])",
+        "dataName": "mad",
+        "dataType": "number",
+        "lineType": "solid",
+        "stack": null,
+        "lineWidth": 2,
+        "defaultColor": "#1E88E5",
+        "fill": null
+      }
+    ]
+  },
+  {
+    "name": "SMA Error Analysis (MAPE)",
+    "uiid": "SMA-MAPE",
+    "legendTemplate": "SMA-MAPE([P1])",
+    "endpoint": "https://charts-api.stockindicators.dev/SMA-ANALYSIS/",
+    "category": "price-characteristic",
+    "chartType": "oscillator",
+    "order": 1,
+    "chartConfig": null,
+    "parameters": [
+      {
+        "displayName": "Lookback Periods",
+        "paramName": "lookbackPeriods",
+        "dataType": "int",
+        "minimum": 2,
+        "maximum": 250,
+        "defaultValue": 14
+      }
+    ],
+    "results": [
+      {
+        "displayName": "Mean Absolute Percentage Error",
+        "tooltipTemplate": "SMA-MAPE([P1])",
+        "dataName": "mape",
+        "dataType": "number",
+        "lineType": "solid",
+        "stack": null,
+        "lineWidth": 2,
+        "defaultColor": "#1E88E5",
+        "fill": null
+      }
+    ]
+  },
+  {
+    "name": "SMA Error Analysis (MSE)",
+    "uiid": "SMA-MSE",
+    "legendTemplate": "SMA-MSE([P1])",
+    "endpoint": "https://charts-api.stockindicators.dev/SMA-ANALYSIS/",
+    "category": "price-characteristic",
+    "chartType": "oscillator",
+    "order": 1,
+    "chartConfig": null,
+    "parameters": [
+      {
+        "displayName": "Lookback Periods",
+        "paramName": "lookbackPeriods",
+        "dataType": "int",
+        "minimum": 2,
+        "maximum": 250,
+        "defaultValue": 14
+      }
+    ],
+    "results": [
+      {
+        "displayName": "Mean Squared Error",
+        "tooltipTemplate": "SMA-MSE([P1])",
+        "dataName": "mse",
         "dataType": "number",
         "lineType": "solid",
         "stack": null,
