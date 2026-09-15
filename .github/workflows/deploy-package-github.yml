@@ -34,7 +34,7 @@ permissions:
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  cancel-in-progress: false
 
 jobs:
   package:
@@ -51,16 +51,16 @@ jobs:
       - name: Validate CI deployment
         run: |
           echo "✅ CI deployment to GitHub Packages"
-          echo "   Branch: ${{ github.ref }}"
-          echo "   Run: ${{ github.run_number }}"
+          echo "   Branch: ${GITHUB_REF}"
+          echo "   Run: ${GITHUB_RUN_NUMBER}"
 
       - name: Set workflow mode
         id: settings
         run: |
           if [[ "${{ github.event_name }}" == "workflow_dispatch" ]]; then
-            echo "dry_run=${{ inputs.dry_run }}" >> $GITHUB_OUTPUT
+            echo "dry_run=${{ inputs.dry_run }}" >> "$GITHUB_OUTPUT"
           else
-            echo "dry_run=false" >> $GITHUB_OUTPUT
+            echo "dry_run=false" >> "$GITHUB_OUTPUT"
           fi
 
       - name: Checkout source
@@ -69,7 +69,7 @@ jobs:
           fetch-depth: 0
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.x"
           dotnet-quality: "ga"
@@ -86,7 +86,7 @@ jobs:
         run: |
           dotnet tool run dotnet-gitversion -config src/gitversion.yml -updateassemblyinfo
           # Export GitVersion variables to environment
-          dotnet tool run dotnet-gitversion -config src/gitversion.yml | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> $GITHUB_ENV
+          dotnet tool run dotnet-gitversion -config src/gitversion.yml | jq -r 'to_entries[] | "\(.key)=\(.value)"' >> "$GITHUB_ENV"
 
       - name: Compose CI version
         id: version_info
@@ -99,7 +99,7 @@ jobs:
           run="${{ github.run_number }}"
           ver="${base}-ci.${run}"
 
-          echo "version=$ver" >> $GITHUB_OUTPUT
+          echo "version=$ver" >> "$GITHUB_OUTPUT"
           echo "Generated CI version: $ver"
 
       - name: Compose package info
@@ -110,8 +110,8 @@ jobs:
             echo "::error::Could not extract PackageId from src/Indicators.csproj"
             exit 1
           fi
-          echo "name=${PACKAGE_NAME}" >> $GITHUB_OUTPUT
-          echo "url=https://github.com/${{ github.repository }}/packages" >> $GITHUB_OUTPUT
+          echo "name=${PACKAGE_NAME}" >> "$GITHUB_OUTPUT"
+          echo "url=https://github.com/${{ github.repository }}/packages" >> "$GITHUB_OUTPUT"
 
       - name: Build library
         run: >
@@ -154,7 +154,7 @@ jobs:
             echo "| **Mode**          | ${MODE}                                          |"
             echo "| **Status**        | ${{ job.status == 'success' && '✅ Success' || '❌ Failed' }} |"
             echo "| **Package URL**   | ${{ steps.package_info.outputs.url }}            |"
-          } >> $GITHUB_STEP_SUMMARY
+          } >> "$GITHUB_STEP_SUMMARY"
 
   deploy:
     needs: package
@@ -178,7 +178,7 @@ jobs:
       url: ${{ needs.package.outputs.url }}
     steps:
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.x"
           dotnet-quality: "ga"
@@ -208,11 +208,12 @@ jobs:
         run: |
           {
             echo "| Version | ${{ env.version }} |"
-          } >> $GITHUB_STEP_SUMMARY
+          } >> "$GITHUB_STEP_SUMMARY"
 
   cleanup:
     needs: [package, deploy]
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     if: success() && needs.package.outputs.dry_run != 'true'
 
     permissions:

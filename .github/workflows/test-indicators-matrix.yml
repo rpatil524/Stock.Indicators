@@ -8,9 +8,6 @@ on:
     paths:
       - src/**
   pull_request:
-    branches:
-      - "main"
-      - "v[0-9]*"
     paths:
       - .github/workflows/test-indicators-matrix.yml
     types: [opened, synchronize, reopened, ready_for_review]
@@ -19,10 +16,16 @@ on:
 permissions:
   contents: read # Required for checkout
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Runs on push only: a cancelled run leaves that commit with no matrix coverage.
+  cancel-in-progress: false
+
 jobs:
   test:
     name: matrix validation
     runs-on: ${{ matrix.os }}
+    timeout-minutes: 30
     if: ${{ !github.event.pull_request.draft }}
 
     strategy:
@@ -40,14 +43,14 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup .NET SDK (legacy sut)
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         if: matrix.dotnet-version != '10.0.x'
         with:
           dotnet-version: ${{ matrix.dotnet-version }}
           dotnet-quality: "ga"
 
       - name: Setup .NET SDK
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.x"
           dotnet-quality: "ga"

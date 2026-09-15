@@ -12,8 +12,9 @@ permissions:
   packages: read
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: true
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  # Supersede a pull request preview; never interrupt a manual production deploy.
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 env:
   NODE_VERSION: 24
@@ -37,28 +38,25 @@ jobs:
         with:
           fetch-depth: 0 # required for proper Last Updated page dates
 
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v6
+      - name: Setup pnpm and Node.js
+        uses: pnpm/setup@v2.1.0
         with:
-          run_install: false
-          package_json_file: docs/package.json
-
-      - name: Setup Node.js
-        uses: actions/setup-node@v6
-        with:
-          node-version: ${{ env.NODE_VERSION }}
-          cache: "pnpm"
-          cache-dependency-path: docs/pnpm-lock.yaml
+          cache: true
+          runtime: node@${{ env.NODE_VERSION }}
+          working-directory: docs
+          install: false
 
       - name: Configure pnpm registry auth
-        run: pnpm config set //npm.pkg.github.com/:_authToken ${{ secrets.GITHUB_TOKEN }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: pnpm config set //npm.pkg.github.com/:_authToken "$GITHUB_TOKEN"
 
       - name: Install pnpm packages
         run: pnpm install --frozen-lockfile
 
       - name: Define tag
         id: tag
-        run: echo "version=$(date +'%Y.%m.%d')-${{ github.run_number }}" >> $GITHUB_OUTPUT
+        run: echo "version=$(date +'%Y.%m.%d')-${{ github.run_number }}" >> "$GITHUB_OUTPUT"
 
       - name: Build site (production)
         if: github.ref == 'refs/heads/main'

@@ -9,29 +9,28 @@ on:
       - "main"
       - "v[0-9]*"
   pull_request:
-    branches: ["*"]
     types: [opened, synchronize, reopened, ready_for_review]
   workflow_dispatch:
 
 permissions:
   contents: read # Required for checkout
-  checks: write # Required for test results
 
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 
 jobs:
   quick-check:
     name: quick check
     runs-on: ubuntu-latest
+    timeout-minutes: 15
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.x"
           dotnet-quality: "ga"
@@ -72,15 +71,20 @@ jobs:
 
   lint-and-test:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: quick-check
     if: ${{ !github.event.pull_request.draft }}
+
+    permissions:
+      contents: read
+      checks: write # Required to post test results
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.x"
           dotnet-quality: "ga"
@@ -98,7 +102,7 @@ jobs:
           --collect:"XPlat Code Coverage"
 
       - name: Post unit test results
-        uses: dorny/test-reporter@v2.3.0
+        uses: dorny/test-reporter@v3
         if: ${{ !cancelled() }}
         with:
           name: Unit test results
@@ -117,7 +121,7 @@ jobs:
         continue-on-error: true
 
       - name: Publish coverage to Codacy
-        uses: codacy/codacy-coverage-reporter-action@v1.3.0
+        uses: codacy/codacy-coverage-reporter-action@v1
         if: success() && github.actor != 'dependabot[bot]'
         with:
           project-token: ${{ secrets.CODACY_PROJECT_TOKEN }}
@@ -127,6 +131,7 @@ jobs:
   lint-full:
     name: linting (full)
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: ["lint-and-test", "test-regression"]
     if: ${{ !github.event.pull_request.draft }}
 
@@ -135,7 +140,7 @@ jobs:
         uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.x"
           dotnet-quality: "ga"
@@ -165,15 +170,20 @@ jobs:
   test-regression:
     name: regression tests
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     needs: quick-check
     if: ${{ !github.event.pull_request.draft }}
+
+    permissions:
+      contents: read
+      checks: write # Required to post test results
 
     steps:
       - name: Checkout source
         uses: actions/checkout@v7
 
       - name: Setup .NET
-        uses: actions/setup-dotnet@v5
+        uses: actions/setup-dotnet@v6
         with:
           dotnet-version: "10.x"
           dotnet-quality: "ga"
@@ -190,7 +200,7 @@ jobs:
           --logger trx
 
       - name: Post regression test results
-        uses: dorny/test-reporter@v2.3.0
+        uses: dorny/test-reporter@v3
         if: ${{ !cancelled() }}
         with:
           name: Regression test results

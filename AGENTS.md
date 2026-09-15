@@ -65,6 +65,21 @@ dotnet format --no-restore && dotnet build && dotnet test --no-restore && npx ma
 
 See the code-completion skill for the complete quality gates checklist, Roslynator commands, and VS Code task equivalents.
 
+## Code navigation
+
+The `csharp-ls` language server indexes every project in `Stock.Indicators.sln`. Resolve symbols through it rather than inferring structure from text search.
+
+It is installed globally rather than from `dotnet-tools.json`, because language server clients spawn the bare binary from PATH. Run `dotnet tool install --global csharp-ls` if your environment did not.
+
+| Use the language server for | Use text search for |
+| --------------------------- | ------------------- |
+| Every caller of a public API member, before renaming or removing it | Literal strings, numeric constants, and test data |
+| Implementations of `IStreamHub`, `IBufferList`, and the `StreamHub/Providers/` base classes | Naming-convention sweeps across many files |
+| The Series, Buffer, and Stream surface for one indicator | Anything outside `.cs` files |
+| Resolved types and XML documentation at a call site | |
+
+The language server reports what the solution *is*, not whether it compiles.
+
 ## Skills for development
 
 This repository uses Agent Skills (.agents/skills/) for domain-specific guidance. Skills are automatically loaded when relevant:
@@ -82,7 +97,7 @@ This repository uses Agent Skills (.agents/skills/) for domain-specific guidance
 | vitepress | VitePress documentation site development - configuration, routing, theme, components | Working on the docs/ site, VitePress config, or custom theme |
 | markdown | Markdown authoring, linting workflow, formatting rules, validation checklist | Creating or modifying any Markdown file |
 
-Skills are defined in .agents/skills/ following the Agent Skills specification.
+Skills are defined in .agents/skills/ following the Agent Skills specification. `.claude/skills` is a tracked symlink to that folder. Edit skills in `.agents/skills/` only; never add files under `.claude/skills/`.
 
 ## Folder-specific guidance
 
@@ -94,14 +109,15 @@ Subfolder AGENTS.md files provide domain-specific context:
 
 ## MCP tools guidance
 
-MCP servers configured in .vscode/mcp.json provide research and documentation lookup:
+MCP servers configured in .mcp.json provide research and documentation lookup:
 
-- microsoft-docs/* - C# coding conventions, .NET best practices, performance optimization
+- microsoft-learn/* - C# coding conventions, .NET best practices, performance optimization
 - context7/* - NuGet package dependencies and external libraries
-- github/web_search - Indicator algorithms, financial calculations, technical analysis standards  
-- github/* - CI workflow details, repository changes, pull requests, issues
+- codacy/* - static analysis findings and coverage for this repository
 
-Use MCP tools for research; use direct file operations for local work.
+Use the `gh` CLI for CI workflow runs, pull requests, and issues.
+
+Use MCP tools for external research, the language server for local symbol navigation, and direct file operations for local edits.
 
 ## Pull request guidelines
 

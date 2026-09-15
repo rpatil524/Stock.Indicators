@@ -5,26 +5,35 @@
 
 echo "🚀 Starting environment setup..."
 
-# Verify .NET is available
 echo "🔍 Verifying .NET environment..."
 dotnet --version
 
-# Verify pnpm is available (installed via devcontainer feature)
 echo "🔍 Verifying pnpm..."
 pnpm --version
 
 echo "🧰 Installing .NET-based tools..."
 dotnet tool restore
 
-# Refresh git repo
+# Global, not from the manifest: LSP clients spawn the bare binary from PATH.
+echo "🧠 Installing C# language server..."
+dotnet tool install --global csharp-ls || dotnet tool update --global csharp-ls
+
+# Claude Code only discovers skills under .claude/skills, and some filesystems
+# materialize the symlink as a plain file on clone.
+if [ "$(readlink .claude/skills 2>/dev/null)" != "../.agents/skills" ]; then
+  echo "🔗 Linking .claude/skills to .agents/skills..."
+  mkdir -p .claude
+  rm -rf .claude/skills
+  ln -sn ../.agents/skills .claude/skills
+fi
+
 echo "🗂️  Fetch and pull from git..."
 git fetch && git pull
 
-# Restore .NET packages
 echo "📦 Restoring .NET packages..."
 dotnet restore
 
-# Write token to your user-level ~/.npmrc (not the project .npmrc)
+# Writes to pnpm's global auth.ini; pnpm ignores ${ENV_VAR} in a project .npmrc.
 echo "📦 Set user scope .npmrc auth..."
 pnpm config set "//npm.pkg.github.com/:_authToken=${GITHUB_TOKEN}"
 

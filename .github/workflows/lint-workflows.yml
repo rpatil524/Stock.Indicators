@@ -1,0 +1,54 @@
+name: Lint workflows
+
+on:
+  push:
+    branches:
+      - "main"
+      - "v[0-9]*"
+    paths:
+      - .github/workflows/**
+      - .github/zizmor.yml
+  pull_request:
+    paths:
+      - .github/workflows/**
+      - .github/zizmor.yml
+  schedule:
+    - cron: "0 7 * * 1"
+  workflow_dispatch:
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Not a required status check: the paths: filters mean it does not run on a
+  # pull request touching no workflow file, which GitHub reports as pending
+  # rather than passing.
+  lint:
+    runs-on: ubuntu-slim
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false # required by zizmor's artipacked audit
+
+      - name: Lint workflows
+        uses: raven-actions/actionlint@v2
+
+      # Not the zizmor action: it runs in a container, and ubuntu-slim has no
+      # Docker. !cancelled() so an actionlint failure still surfaces findings.
+      - name: Scan workflows
+        if: ${{ !cancelled() }}
+        env:
+          ZIZMOR_VERSION: "1.30.1"
+          GH_TOKEN: ${{ github.token }} # online audits resolve action refs
+        run: |
+          pipx run "zizmor==${ZIZMOR_VERSION}" \
+            --format=github \
+            --min-severity=medium \
+            .github/workflows
