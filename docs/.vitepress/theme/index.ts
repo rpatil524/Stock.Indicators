@@ -3,6 +3,7 @@ import type { Theme } from 'vitepress'
 import DefaultTheme from 'vitepress/theme'
 import './custom.scss'
 import Contributors from '../components/Contributors.vue'
+import MarkdownPageActions from '../components/MarkdownPageActions.vue'
 import { setupIndyChartsForVue } from '@facioquo/indy-charts/vue'
 import { DARK_SURFACE, LIGHT_SURFACE } from './chart-theme'
 import { CHART_API_BASE_URL, CHART_API_RESILIENCE } from './chart-api'
@@ -162,5 +163,7 @@ export default {
     })
 
     app.component('Contributors', Contributors)
+    // Replace the plugin's extension point with accessible text-labelled controls.
+    app.component('CopyOrDownloadAsMarkdownButtons', MarkdownPageActions)
   }
 } satisfies Theme
