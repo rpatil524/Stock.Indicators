@@ -82,6 +82,21 @@ test('Markdown page actions expose and retrieve source content', async ({ contex
     .toContain('# Simple Moving Average (SMA)')
 })
 
+test('Copy page control appears once, in the hero, on hub pages', async ({ page }) => {
+  // guide/index.md, indicators.md, and utilities/index.md render via VitePress's
+  // `layout: home`, which has no markdown H1 for the plugin's own injection
+  // point to attach to. The theme places the control in the hero instead (see
+  // `home-hero-info-after` in theme/index.ts) — regression coverage for #2236
+  // and #2241 recurring on this layout.
+  for (const path of ['/guide/', '/indicators/', '/utilities/']) {
+    await page.goto(path, { waitUntil: 'domcontentloaded' })
+    await expect(page.locator('.VPHero .markdown-copy-buttons')).toBeVisible()
+    await expect(page.getByRole('button', { name: 'Copy page' })).toHaveCount(1)
+    // the hero title must not be duplicated as a second, plain heading
+    await expect(page.locator('h1')).toHaveCount(1)
+  }
+})
+
 test('WebMCP exposes read-only documentation tools', async ({ page }) => {
   await page.addInitScript(() => {
     const tools: TestWebMcpTool[] = []
