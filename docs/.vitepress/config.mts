@@ -141,9 +141,9 @@ export default defineConfig({
       {
         text: 'AI tools',
         items: [
-          { text: 'Suggested prompts', link: '/guide/getting-started#work-with-a-coding-agent' },
-          { text: 'Documentation index (LLMs)', link: '/llms.txt' },
-          { text: 'Complete documentation (LLMs)', link: '/llms-full.txt' },
+          { text: 'Agent setup', link: '/guide/agent-setup' },
+          { text: 'Docs index (LLMs)', link: '/llms.txt' },
+          { text: 'Complete docs (LLMs)', link: '/llms-full.txt' },
         ]
       },
       {
@@ -164,7 +164,13 @@ export default defineConfig({
           text: 'Guide',
           items: [
             { text: 'Overview', link: '/guide/' },
-            { text: 'Getting started', link: '/guide/getting-started' },
+            {
+              text: 'Getting started',
+              link: '/guide/getting-started',
+              items: [
+                { text: 'Agent setup', link: '/guide/agent-setup' }
+              ]
+            },
             {
               text: 'Indicator styles',
               items: [
