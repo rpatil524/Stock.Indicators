@@ -18,20 +18,4 @@ public static partial class PivotPoints
 
     private static readonly DayOfWeek firstDayOfWeek
         = invariantCulture.DateTimeFormat.FirstDayOfWeek;
-
-    /// <summary>
-    /// Removes the warmup periods from the pivot points results.
-    /// </summary>
-    /// <param name="results">List of pivot points results.</param>
-    /// <returns>A list of pivot points results without the warmup periods.</returns>
-    public static IReadOnlyList<PivotPointsResult> RemoveWarmupPeriods(
-        this IReadOnlyList<PivotPointsResult> results)
-    {
-        ArgumentNullException.ThrowIfNull(results);
-
-        int removePeriods = results
-            .FindIndex(static x => x.PP != null);
-
-        return results.Remove(removePeriods);
-    }
 }
