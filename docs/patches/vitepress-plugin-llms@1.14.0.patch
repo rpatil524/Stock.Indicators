@@ -1,3 +1,21 @@
+diff --git a/dist/index.js b/dist/index.js
+index 36612eeae11b6a232e52548fb020eeacea3858c0..fc51d7fca47e7c55488ab5a8795aef2d9ebacf16 100644
+--- a/dist/index.js
++++ b/dist/index.js
+@@ -930,9 +930,11 @@ function extractImageMap(bundle) {
+ 	}
+ 	return imageMap;
+ }
++// facioquo patch: POSIX paths on Windows. The directory-index rule below must
++// match markdownPath() in docs/.vitepress/routes.ts.
+ function resolvePagePath(file, workDir, config) {
+-	const resolved = path.relative(workDir, resolveOutputFilePath(file, workDir, config.vitepress.userConfig.rewrites));
+-	const directory = path.dirname(resolved);
++	const resolved = transformToPosixPath(path.relative(workDir, resolveOutputFilePath(file, workDir, config.vitepress.userConfig.rewrites)));
++	const directory = path.posix.dirname(resolved);
+ 	return path.basename(resolved) === "index.md" && directory !== "." && directory !== "" ? `${directory}.md` : resolved;
+ }
+ async function prepareMarkdownFiles({ bundle, mdFiles, settings, config }) {
 diff --git a/dist/vitepress-components/CopyOrDownloadAsMarkdownButtons.vue b/dist/vitepress-components/CopyOrDownloadAsMarkdownButtons.vue
 index 5cbd240c46cbe7873b27b6912040e22ac952ff8e..1503a5b8b3715f85dcd97630b29a6b61d5fa4fd7 100644
 --- a/dist/vitepress-components/CopyOrDownloadAsMarkdownButtons.vue

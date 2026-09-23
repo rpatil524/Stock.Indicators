@@ -57,6 +57,13 @@ jobs:
       - name: Test accessibility
         run: pnpm run test:a11y
 
+      # Validates agent-facing output: llms.txt identity, per-page Markdown,
+      # discovery files, redirects, canonical metadata, Markdown negotiation,
+      # and WebMCP tools.
+      - name: Test agent features
+        if: ${{ !cancelled() }}
+        run: pnpm run test:agents
+
       - name: Upload report
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v7
