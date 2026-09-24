@@ -58,6 +58,10 @@ Start with **Batch (Series)** style unless you have a specific need for incremen
 - Use **[Buffer lists](/guide/styles/buffer)** when bars arrive one at a time and you need incremental processing without the overhead of a full hub infrastructure.
 - Use **[Stream hubs](/guide/styles/stream)** when you need coordinated, automatic updates across multiple chained indicators from a live data feed with self-healing.
 
+### Bars that arrive one at a time
+
+Don't re-run a Series method for every new bar. Its cost grows with the history it recalculates, while a stream hub's cost per new bar stays flat. For EMA, SMA, RSI and MACD, the hub is already cheaper once the history passes about 12 to 20 bars, and at 1,000 bars the Series method costs 40 to 110 times as much per bar. To measure it on your own hardware, run the `StreamCrossover` benchmark in `tools/performance`.
+
 ## Getting started
 
 See [Getting started](/guide/getting-started) for installation, first steps, and example usage.
